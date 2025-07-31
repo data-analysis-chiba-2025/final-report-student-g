@@ -1,0 +1,90 @@
+---
+title: "Seismic Events at Mount Vesvius ベスビオ火山の地震活動)"
+author: Student G
+format: docx
+---
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+
+# Load packages
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+#| label: load-data
+#| echo: false
+#| message: false
+
+# Load the data
+vesuvius_data <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-05-13/vesuvius.csv")
+
+vesuvius <- 
+  vesuvius_data |> 
+  clean_names()
+
+```
+
+## Introduction
+
+The "vesuvius" dataset includes week explores seismic events detected at the famous Mount Vesvius in Italy. The date is from `r min(vesuvius$year)`to`r max(vesuvius$year)`. The original data come from the INGV's Data Portal, <https://data.ingv.it/en/>.
+
+According to a study on magnitude of earthquakes using worldwide data, the magunitude are related to the faults length, and the ratio of the thickness of the earth's crust to the focal depth is related to fault length (IIDA.K, 1965). Therefore, it can be assumed that there is a relationship between earthquake depth and magunitude.
+
+We analyze the vesuvius dataset to answer the following questions:
+
+-How has the number of seismic events changed?
+-Is there a relationship between earthquake depth and magunitude at Vesvius?
+
+## Data visualization
+
+```{r}
+#| echo: false
+
+vesuvius |> 
+  filter(!is.na(year)) |>        
+  count(year) |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "darkblue") +
+  labs(
+    title = "Figure 1",
+    subtitle = "Annual number of earthquakes",
+    y = "number of earthquakes",
+    x = "year"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r}
+#| echo: false
+
+vesuvius_clean <- vesuvius %>% 
+  filter(!is.na(depth_km), !is.na(duration_magnitude_md))
+
+ggplot(vesuvius, aes(x = depth_km, y = duration_magnitude_md)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Figure 2",
+    subtitle = "Relationship between magnitude and earthquake depth",
+    y = "earthquake depth(km)",
+    x = "magnitude"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+cor_value <- cor(vesuvius$depth_km, vesuvius$duration_magnitude_md, use = "complete.obs")
+
+```
+correlation coefficient: `r round(cor_value, 2)`
+
+## Discussion
+
+Figure 1 shows the changes in seismic activity at Mount Vesuvius over the past decade. There are about 500 to 1000 earthquakes per year, and the number has been increasing in recent years.
+
+Figure 2 shows the relationships between magnitude and earthquake depth. As shown in the previous study, magnitude is related to earthquake depth. However, the correlation coefficient is low (approximately 0.3), indicating a weak relationship.
+
+## References
+
+IIDA, K. (1965). "Earthquake magnitude, earthquake fault, and source dimensions". 津波ディジタルライブラリィ. https://tsunami-dl.jp/document/163
